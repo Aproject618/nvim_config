@@ -38,17 +38,51 @@ require("lazy").setup({
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "sql" },  -- Убедитесь, что SQL установлен
+        ensure_installed = { "python", "go", "sql" },  -- Убедитесь, что Go и Python установлены
         highlight = { enable = true },
       })
     end,
   },
 
-  -- LSP
+  -- Mason для установки LSP серверов
+  {
+    "williamboman/mason.nvim",
+    config = function()
+      require("mason").setup()
+    end,
+  },
+
+  -- Интеграция Mason с nvim-lspconfig
+  {
+    "williamboman/mason-lspconfig.nvim",
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = { "pyright", "gopls" },  -- Установим Python и Go LSP серверы
+      })
+    end,
+  },
+
+  -- LSP конфигурация
   {
     "neovim/nvim-lspconfig",
     config = function()
-      require("lspconfig").sqls.setup({})
+      -- Настройка LSP для Python
+      require("lspconfig").pyright.setup({})
+
+      -- Настройка LSP для Go
+      require("lspconfig").gopls.setup({
+        cmd = { "gopls" },  -- Убедитесь, что gopls установлен
+        filetypes = { "go", "gomod" },
+        settings = {
+          gopls = {
+            analyses = {
+              unusedparams = true,
+              shadow = true,
+            },
+            staticcheck = true,
+          },
+        },
+      })
     end,
   },
 
@@ -112,7 +146,6 @@ vim.api.nvim_set_keymap("n", "<leader>r", ":DB<CR>", { noremap = true, silent = 
 vim.g.sqlfmt_command = "sqlfmt"
 vim.g.sqlfmt_options = "-u"
 
-
 -- Функция для подсветки слов, состоящих только из заглавных букв
 vim.api.nvim_exec([[
   function! HighlightCapsWords()
@@ -128,4 +161,3 @@ vim.api.nvim_exec([[
 vim.cmd [[
   highlight Keyword guifg=#5cfae2  " Изменяем цвет шрифта для слов CapsLock
 ]]
-
